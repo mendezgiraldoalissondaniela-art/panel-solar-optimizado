@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Mezclas Óptimas - Modelo Vectorial RGB</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+        }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--secondary);
+        }
+        
+        .simulator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .color-controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        .color-preview {
+            width: 100%;
+            height: 150px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 3px solid #ddd;
+            transition: all 0.3s ease;
+        }
+        
+        .slider-container {
+            margin: 15px 0;
+        }
+        
+        .slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .preset-colors {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .color-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .vector-math {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .results {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 SISTEMA DE MEZCLAS ÓPTIMAS DE PINTURA</h1>
+            <h3>Modelo Vectorial en ℝ³ - Combinaciones Lineales RGB</h3>
+        </div>
+        
+        <div class="simulator-grid">
+            <div class="color-controls">
+                <h3>🔧 CONTROL DE MEZCLAS</h3>
+                
+                <div class="slider-container">
+                    <label>ROJO (R): <span id="redValue">0</span></label>
+                    <input type="range" min="0" max="255" value="0" class="slider" id="redSlider">
+                </div>
+                
+                <div class="slider-container">
+                    <label>VERDE (G): <span id="greenValue">0</span></label>
+                    <input type="range" min="0" max="255" value="0" class="slider" id="greenSlider">
+                </div>
+                
+                <div class="slider-container">
+                    <label>AZUL (B): <span id="blueValue">0</span></label>
+                    <input type="range" min="0" max="255" value="0" class="slider" id="blueSlider">
+                </div>
+                
+                <div class="color-preview" id="colorPreview"></div>
+                
+                <h4>🎨 COLORES PREDEFINIDOS</h4>
+                <div class="preset-colors">
+                    <button class="color-btn" style="background:rgb(255,255,0)" onclick="setPreset(255,255,0)">Amarillo</button>
+                    <button class="color-btn" style="background:rgb(255,0,255)" onclick="setPreset(255,0,255)">Magenta</button>
+                    <button class="color-btn" style="background:rgb(0,255,255)" onclick="setPreset(0,255,255)">Cian</button>
+                    <button class="color-btn" style="background:rgb(179,204,26)" onclick="setPreset(179,204,26)">A. Limón</button>
+                    <button class="color-btn" style="background:rgb(230,217,0)" onclick="setPreset(230,217,0)">A. Mostaza</button>
+                    <button class="color-btn" style="background:rgb(230,0,217)" onclick="setPreset(230,0,217)">M. Vibrante</button>
+                </div>
+            </div>
+            
+            <div class="vector-math">
+                <h3>🧮 MODELO MATEMÁTICO</h3>
+                <p><strong>Combinación Lineal:</strong></p>
+                <p>C = α·R + β·G + γ·B</p>
+                <p>Donde:</p>
+                <p>R = (255, 0, 0)</p>
+                <p>G = (0, 255, 0)</p>
+                <p>B = (0, 0, 255)</p>
+                <p>α, β, γ ∈ [0, 1]</p>
+                
+                <div id="currentEquation">
+                    <p><strong>Ecuación Actual:</strong></p>
+                    <p>C = <span id="alphaVal">0.00</span>·R + <span id="betaVal">0.00</span>·G + <span id="gammaVal">0.00</span>·B</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="results">
+            <h3>📊 RESULTADOS Y FÓRMULA</h3>
+            <p><strong>Vector RGB Resultante:</strong> <span id="vectorResult">(0, 0, 0)</span></p>
+            <p><strong>Proporciones Óptimas:</strong> R: <span id="propR">0%</span> | G: <span id="propG">0%</span> | B: <span id="propB">0%</span></p>
+            <p><strong>Fórmula de Mezcla:</strong> <span id="formula">Mezclar 0% Rojo, 0% Verde, 0% Azul</span></p>
+        </div>
+        
+        <div style="margin-top: 30px; text-align: center;">
+            <canvas id="colorSpaceChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Elementos DOM
+        const redSlider = document.getElementById('redSlider');
+        const greenSlider = document.getElementById('greenSlider');
+        const blueSlider = document.getElementById('blueSlider');
+        const colorPreview = document.getElementById('colorPreview');
+        const vectorResult = document.getElementById('vectorResult');
+        const formula = document.getElementById('formula');
+        const propR = document.getElementById('propR');
+        const propG = document.getElementById('propG');
+        const propB = document.getElementById('propB');
+        const alphaVal = document.getElementById('alphaVal');
+        const betaVal = document.getElementById('betaVal');
+        const gammaVal = document.getElementById('gammaVal');
+
+        // Actualizar interfaz
+        function updateInterface() {
+            const r = parseInt(redSlider.value);
+            const g = parseInt(greenSlider.value);
+            const b = parseInt(blueSlider.value);
+            
+            // Actualizar valores mostrados
+            document.getElementById('redValue').textContent = r;
+            document.getElementById('greenValue').textContent = g;
+            document.getElementById('blueValue').textContent = b;
+            
+            // Actualizar preview de color
+            colorPreview.style.backgroundColor = `rgb(${r},${g},${b})`;
+            
+            // Calcular proporciones normalizadas
+            const total = r + g + b;
+            const prop_r = total > 0 ? (r / total * 100).toFixed(1) : 0;
+            const prop_g = total > 0 ? (g / total * 100).toFixed(1) : 0;
+            const prop_b = total > 0 ? (b / total * 100).toFixed(1) : 0;
+            
+            // Actualizar resultados
+            vectorResult.textContent = `(${r}, ${g}, ${b})`;
+            propR.textContent = `${prop_r}%`;
+            propG.textContent = `${prop_g}%`;
+            propB.textContent = `${prop_b}%`;
+            
+            // Calcular coeficientes alpha, beta, gamma
+            const alpha = (r / 255).toFixed(2);
+            const beta = (g / 255).toFixed(2);
+            const gamma = (b / 255).toFixed(2);
+            
+            alphaVal.textContent = alpha;
+            betaVal.textContent = beta;
+            gammaVal.textContent = gamma;
+            
+            // Generar fórmula
+            formula.textContent = `Mezclar ${Math.round(r/255*100)}% Rojo, ${Math.round(g/255*100)}% Verde, ${Math.round(b/255*100)}% Azul`;
+            
+            updateChart(r, g, b);
+        }
+
+        // Establecer color predefinido
+        function setPreset(r, g, b) {
+            redSlider.value = r;
+            greenSlider.value = g;
+            blueSlider.value = b;
+            updateInterface();
+        }
+
+        // Gráfico de espacio de color (simplificado)
+        function updateChart(r, g, b) {
+            const ctx = document.getElementById('colorSpaceChart').getContext('2d');
+            
+            if (window.colorChart) {
+                window.colorChart.destroy();
+            }
+            
+            window.colorChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Rojo', 'Verde', 'Azul'],
+                    datasets: [{
+                        label: 'Intensidad RGB',
+                        data: [r, g, b],
+                        backgroundColor: ['#ff0000', '#00ff00', '#0000ff'],
+                        borderColor: ['#cc0000', '#00cc00', '#0000cc'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 255
+                        }
+                    }
+                }
+            });
+        }
+
+        // Event listeners
+        redSlider.addEventListener('input', updateInterface);
+        greenSlider.addEventListener('input', updateInterface);
+        blueSlider.addEventListener('input', updateInterface);
+
+        // Inicializar
+        updateInterface();
+    </script>
+</body>
+</html>
